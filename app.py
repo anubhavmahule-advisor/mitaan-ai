@@ -37,10 +37,10 @@ if st.button("🔍 Detect Trends with AI"):
 st.markdown("---")
 
 # ── AI CHAT ────────────────────────────────────────
-st.header("💬 Ask AI Anything")
-st.caption("Ask any question about Mitaan applications data")
+st.header("💬 Mor Sangwari")
+st.caption("Mor Sangwari is your AI-powered smart companion, delivering instant insights and intelligent support—anytime you need it.")
 
-user_question = st.text_input("Type your question here...")
+user_question = st.text_input("Ask about the project here.. applications pending, ULB analysis etc")
 
 if user_question:
     with st.spinner("🤖 AI is processing your question..."):
