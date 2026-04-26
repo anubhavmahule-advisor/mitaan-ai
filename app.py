@@ -19,24 +19,7 @@ def fetch_data(query):
         return None, rows
     return pd.DataFrame(rows), None
 
-# ── AI TREND ANALYSIS ──────────────────────────────
-st.header("🤖 AI Trend Analysis")
-st.caption("Click button to fetch live data and detect trends using Gemini AI")
-
-if st.button("🔍 Detect Trends with AI"):
-    with st.spinner("Fetching data from Mitaan DB..."):
-        df5, error = fetch_data(Q5_GEMINI_TRENDS)
-        if error:
-            st.error(f"DB Error: {error}")
-        else:
-            st.success(f"✅ {len(df5)} records fetched!")
-            with st.spinner("Analyzing trends with Gemini AI..."):
-                trends = detect_trends(df5.to_string())
-                st.write(trends)
-
-st.markdown("---")
-
-# ── AI CHAT ────────────────────────────────────────
+# ── MOR SANGWARI CHAT ──────────────────────────────
 st.header("💬 Mor Sangwari")
 st.caption("Mor Sangwari is your AI-powered smart companion, delivering instant insights and intelligent support—anytime you need it.")
 
@@ -60,3 +43,20 @@ if user_question:
                 st.write(answer)
             if len(df) > 0:
                 st.dataframe(df, use_container_width=True)
+
+st.markdown("---")
+
+# ── AI TREND ANALYSIS ──────────────────────────────
+st.header("🤖 AI Trend Analysis")
+st.caption("Click button to fetch live data and detect trends using Gemini AI")
+
+if st.button("🔍 Detect Trends with AI"):
+    with st.spinner("Fetching data from Mitaan DB..."):
+        df5, error = fetch_data(Q5_GEMINI_TRENDS)
+        if error:
+            st.error(f"DB Error: {error}")
+        else:
+            st.success(f"✅ {len(df5)} records fetched!")
+            with st.spinner("Analyzing trends with Gemini AI..."):
+                trends = detect_trends(df5.to_string())
+                st.write(trends)
