@@ -3,3 +3,4 @@ google-genai
 pymysql
 python-dotenv
 pandas
+flask
