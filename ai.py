@@ -116,6 +116,7 @@ Rules:
     return response.text.strip()
 
 def format_answer(user_question, sql, data):
+    # Sends data to Gemini and gets a WhatsApp formatted answer
     prompt = f"""
 You are an expert government data analyst for Mitaan project in Chhattisgarh.
 
@@ -129,9 +130,27 @@ Data returned:
 {STATUS_GUIDE}
 
 Now answer the user question clearly based on the data.
+
+Format your answer for WhatsApp using:
+- Use *bold* for important numbers and headings
+- Use emojis for visual clarity
+- Use line breaks between sections
+- Keep it concise and scannable on mobile
+- Structure like this example:
+
+📍 *Raipur Pending Cases*
+─────────────────────
+📋 Birth Certificate: 120
+📋 Death Certificate: 85
+📋 Marriage Cert: 40
+─────────────────────
+📊 *Total: 245 cases*
+
+Rules:
 - Be specific with numbers
 - Keep it concise
-- If data is empty say "No records found for this query"
+- If data is empty say "❌ No records found for this query"
+- Never show raw SQL or technical details
 """
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -140,6 +159,7 @@ Now answer the user question clearly based on the data.
     return response.text.strip()
 
 def detect_trends(data):
+    # Analyzes data and returns WhatsApp formatted trend report
     prompt = f"""
 You are an expert government data analyst for Mitaan project in Chhattisgarh.
 
@@ -148,12 +168,28 @@ You are an expert government data analyst for Mitaan project in Chhattisgarh.
 Analyze this pending applications data and detect key trends:
 {data}
 
-Provide:
-1. Top 3 critical observations
-2. Which ULB needs urgent attention and why
-3. Which service is most problematic
-4. Any unusual patterns you notice
-5. 2 actionable recommendations
+Format your response for WhatsApp:
+
+🔍 *Mitaan Trend Analysis*
+─────────────────────
+
+📌 *Critical Observations*
+1. [observation with numbers]
+2. [observation with numbers]
+3. [observation with numbers]
+
+🚨 *ULB Needing Urgent Attention*
+[ULB name and reason with numbers]
+
+⚠️ *Most Problematic Service*
+[service name and numbers]
+
+🔎 *Unusual Patterns*
+[pattern with numbers]
+
+✅ *Recommendations*
+1. [recommendation]
+2. [recommendation]
 
 Be specific with numbers. Keep it concise.
 """
