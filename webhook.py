@@ -8,28 +8,30 @@ app = Flask(__name__)
 
 def process_question(user_question):
     try:
-        # Step 1 — Generate SQL
+        # Generate SQL from question
         sql = generate_sql(user_question)
-        
-        # Step 2 — Run SQL on DB
+        print(f"Generated SQL: {sql}")
+
+        # Run SQL on DB
         columns, rows = run_query(sql)
-        
+        print(f"DB Response: {rows}")
+
         if isinstance(rows, str):
-            return "Sorry, I could not fetch data. Please rephrase your question."
-        
+            return f"DB Error: {rows}"
+
         df = pd.DataFrame(rows)
-        
-        # Step 3 — Format Answer
+
+        # Format answer
         answer = format_answer(
             user_question,
             sql,
             df.to_string() if df is not None else "No data"
         )
-        
         return answer
-    
+
     except Exception as e:
-        return "Sorry, something went wrong. Please try again."
+        print(f"Error: {str(e)}")
+        return f"Error: {str(e)}"
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
