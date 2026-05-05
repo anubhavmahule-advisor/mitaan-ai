@@ -9,12 +9,13 @@ import time
 app = Flask(__name__)
 
 # Greeting message shown when boss first messages
-GREETING = """🙏 *Welcome to Mor Sangwari!*
-_Your AI-powered Mitaan companion_
+GREETING = """🙏 *Welcome to Mor Sangwari Analysis !*
+_Your AI-powered Sangwari companion_
 ─────────────────────
 I can help you with:
 📊 Pending cases analysis
-📍 ULB wise performance
+📍 ULB analysis
+📊 Compare 2-3 ulb's on performance
 🔄 Sent back cases
 ❌ Rejection analysis
 📦 Delivery status
@@ -98,9 +99,12 @@ def webhook():
         print(f"Incoming data: {data}")
 
         try:
-            # Extract message text and sender
-            user_message = data.get("message", "").strip()
-            sender = data.get("sender", "")
+            # Log entire payload to see ChatMitra format
+print(f"FULL PAYLOAD: {data}")
+
+# Try to extract message safely
+user_message = data.get("message", "").strip()
+sender = data.get("sender", "")
 
             print(f"Message from {sender}: {user_message}")
 
