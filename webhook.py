@@ -92,12 +92,10 @@ def extract_message(data):
     print(f"FULL PAYLOAD RECEIVED: {data}")
 
     # Format 1 — simple flat format
-    # {"message": "hi", "sender": "91XXXXXX"}
     if isinstance(data.get("message"), str):
         return data.get("message", "").strip(), data.get("sender", "")
 
     # Format 2 — nested message object
-    # {"event": "message.received", "data": {"message": {"text": "hi"}, "contact": {"phone": "91XXXXXX"}}}
     if data.get("data"):
         inner = data.get("data", {})
         message_obj = inner.get("message", {})
@@ -109,7 +107,6 @@ def extract_message(data):
             return text.strip(), sender
 
     # Format 3 — messages array
-    # {"messages": [{"text": {"body": "hi"}, "from": "91XXXXXX"}]}
     if data.get("messages"):
         messages = data.get("messages", [])
         if len(messages) > 0:
@@ -120,7 +117,6 @@ def extract_message(data):
                 return text.strip(), sender
 
     # Format 4 — entry array (Meta standard format)
-    # {"entry": [{"changes": [{"value": {"messages": [{"text": {"body": "hi"}}]}}]}]}
     if data.get("entry"):
         try:
             entry = data["entry"][0]
@@ -135,17 +131,17 @@ def extract_message(data):
         except Exception as e:
             print(f"Format 4 extraction error: {str(e)}")
 
-    # Nothing matched — return empty
+    # Nothing matched
     print("Could not extract message from payload")
     return "", ""
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
-    # GET request — for webhook verification by ChatMitra
+    # GET request — for webhook verification
     if request.method == "GET":
         return jsonify({"status": "webhook active"}), 200
 
-    # POST request — incoming WhatsApp message from ChatMitra
+    # POST request — incoming WhatsApp message
     if request.method == "POST":
         data = request.json
         print(f"RAW DATA: {data}")
@@ -162,7 +158,7 @@ def webhook():
             if user_message.lower() in ["hi", "hello", "hey", "namaste", "hii"]:
                 return jsonify({"reply": GREETING}), 200
 
-            # Show menu when boss types menu
+            # Show menu
             if user_message.lower() == "menu":
                 return jsonify({"reply": MENU}), 200
 
@@ -175,11 +171,9 @@ def webhook():
             return jsonify({"reply": "❌ Something went wrong. Please try again."}), 200
 
 @app.route("/", methods=["GET"])
-# Home route to confirm webhook server is running
 def home():
     return "Mor Sangwari Webhook is Live ✅", 200
 
 if __name__ == "__main__":
-    # Start server on port defined by Render or default 5000
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
