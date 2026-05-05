@@ -9,13 +9,12 @@ import time
 app = Flask(__name__)
 
 # Greeting message shown when boss first messages
-GREETING = """🙏 *Welcome to Mor Sangwari Analysis !*
-_Your AI-powered Sangwari companion_
+GREETING = """🙏 *Welcome to Mor Sangwari!*
+_Your AI-powered Mitaan companion_
 ─────────────────────
 I can help you with:
 📊 Pending cases analysis
-📍 ULB analysis
-📊 Compare 2-3 ulb's on performance
+📍 ULB wise performance
 🔄 Sent back cases
 ❌ Rejection analysis
 📦 Delivery status
@@ -23,7 +22,7 @@ I can help you with:
 Type *menu* anytime to see options
 Or just ask your question directly!"""
 
-# Menu shown when boss types "menu"
+# Menu shown when boss types menu
 MENU = """📋 *Mor Sangwari Menu*
 ─────────────────────
 Ask me anything like:
@@ -60,7 +59,8 @@ def process_question(user_question):
                 sql = generate_sql(user_question)
                 print(f"Generated SQL: {sql}")
                 break
-            except Exception:
+            except Exception as e:
+                print(f"Gemini attempt {attempt + 1} failed: {str(e)}")
                 if attempt < 2:
                     time.sleep(3)
                 else:
@@ -68,7 +68,7 @@ def process_question(user_question):
 
         # Run SQL on Mitaan DB
         columns, rows = run_query(sql)
-        print(f"DB Response rows: {len(rows) if not isinstance(rows, str) else rows}")
+        print(f"DB rows fetched: {len(rows) if not isinstance(rows, str) else rows}")
 
         if isinstance(rows, str):
             return f"❌ Could not fetch data.\nPlease rephrase your question."
@@ -84,8 +84,60 @@ def process_question(user_question):
         return answer
 
     except Exception as e:
-        print(f"Error: {str(e)}")
+        print(f"Error in process_question: {str(e)}")
         return "❌ Something went wrong. Please try again."
+
+def extract_message(data):
+    # Try multiple possible ChatMitra payload formats to extract message text
+    print(f"FULL PAYLOAD RECEIVED: {data}")
+
+    # Format 1 — simple flat format
+    # {"message": "hi", "sender": "91XXXXXX"}
+    if isinstance(data.get("message"), str):
+        return data.get("message", "").strip(), data.get("sender", "")
+
+    # Format 2 — nested message object
+    # {"event": "message.received", "data": {"message": {"text": "hi"}, "contact": {"phone": "91XXXXXX"}}}
+    if data.get("data"):
+        inner = data.get("data", {})
+        message_obj = inner.get("message", {})
+        contact_obj = inner.get("contact", {})
+
+        text = message_obj.get("text", "") if isinstance(message_obj, dict) else ""
+        sender = contact_obj.get("phone", "") if isinstance(contact_obj, dict) else ""
+        if text:
+            return text.strip(), sender
+
+    # Format 3 — messages array
+    # {"messages": [{"text": {"body": "hi"}, "from": "91XXXXXX"}]}
+    if data.get("messages"):
+        messages = data.get("messages", [])
+        if len(messages) > 0:
+            msg = messages[0]
+            text = msg.get("text", {}).get("body", "")
+            sender = msg.get("from", "")
+            if text:
+                return text.strip(), sender
+
+    # Format 4 — entry array (Meta standard format)
+    # {"entry": [{"changes": [{"value": {"messages": [{"text": {"body": "hi"}}]}}]}]}
+    if data.get("entry"):
+        try:
+            entry = data["entry"][0]
+            changes = entry.get("changes", [{}])[0]
+            value = changes.get("value", {})
+            messages = value.get("messages", [{}])
+            if messages:
+                text = messages[0].get("text", {}).get("body", "")
+                sender = messages[0].get("from", "")
+                if text:
+                    return text.strip(), sender
+        except Exception as e:
+            print(f"Format 4 extraction error: {str(e)}")
+
+    # Nothing matched — return empty
+    print("Could not extract message from payload")
+    return "", ""
 
 @app.route("/webhook", methods=["GET", "POST"])
 def webhook():
@@ -96,17 +148,12 @@ def webhook():
     # POST request — incoming WhatsApp message from ChatMitra
     if request.method == "POST":
         data = request.json
-        print(f"Incoming data: {data}")
+        print(f"RAW DATA: {data}")
 
         try:
-            # Log entire payload to see ChatMitra format
-print(f"FULL PAYLOAD: {data}")
-
-# Try to extract message safely
-user_message = data.get("message", "").strip()
-sender = data.get("sender", "")
-
-            print(f"Message from {sender}: {user_message}")
+            # Extract message using multiple format attempts
+            user_message, sender = extract_message(data)
+            print(f"Extracted message: '{user_message}' from sender: '{sender}'")
 
             if not user_message:
                 return jsonify({"reply": "Please ask a question."}), 200
